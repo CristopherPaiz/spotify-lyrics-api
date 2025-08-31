@@ -101,8 +101,8 @@ export async function getSpotifyToken(
 
 	// Get token from API
 	const SP_DC =
-		env.SP_DC.split(",")[
-			Math.floor(Math.random() * env.SP_DC.split(",").length)
+		env.SP_DC?.split(",")[
+			Math.floor(Math.random() * env.SP_DC?.split(",").length)
 		];
 
 	const serverTime = await fetch("https://open.spotify.com/api/server-time", {
