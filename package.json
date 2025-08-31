@@ -18,7 +18,7 @@
     "@vercel/node": "^5.1.7",
     "better-sqlite3": "^12.2.0",
     "crypto-js": "^4.2.0",
-    "dotenv": "17.0.1",
+    "dotenv": "17.2.1",
     "h3": "^1.15.0",
     "h3-compression": "^0.3.2",
     "languagedetect": "^2.0.0",
