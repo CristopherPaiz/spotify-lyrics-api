@@ -1,0 +1,14 @@
+node_modules/
+certs/*
+!certs/.gitkeep
+dist/
+.env
+.dev.vars
+.vercel
+.wrangler
+wrangler.toml
+biome.json
+token
+tmp-*
+Patched.apk
+Patched.apk.idsig

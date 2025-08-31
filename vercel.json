@@ -1,0 +1,22 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "installCommand": "pnpm install",
+    "buildCommand": "pnpm run build",
+    "outputDirectory": "api",
+    "functions": {
+        "api/vercel.ts": {
+            "runtime": "@vercel/node@3.2.14",
+            "maxDuration": 60
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/bootstrap/v1/bootstrap",
+            "destination": "https://spclient.wg.spotify.com/bootstrap/v1/bootstrap"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/api/vercel.ts"
+        }
+    ]
+}
