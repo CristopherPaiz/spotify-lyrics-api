@@ -19,7 +19,7 @@
     "better-sqlite3": "^12.2.0",
     "crypto-js": "^4.2.0",
     "dotenv": "17.0.1",
-    "h3": "^1.15.0",
+    "h3": "^1.15.4",
     "h3-compression": "^0.3.2",
     "languagedetect": "^2.0.0",
     "mysql2": "^3.14.1",
