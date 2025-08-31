@@ -53,6 +53,16 @@ async function getLyricsFromDB(track_id: string) {
 }
 
 async function getSpotifyLyrics(id: string, image_url: string | null = null) {
+    // --- LOGGING ---
+    console.log("Attempting to fetch lyrics from Spotify...");
+	const spotifyToken = await getSpotifyToken(env, database);
+	if (!spotifyToken) {
+		console.log("Spotify fetch failed: Could not get Spotify token. Is SP_DC cookie valid?");
+		return null;
+	}
+    console.log("Successfully got Spotify token. Fetching lyrics URL...");
+    // --- END LOGGING ---
+
 	const url = image_url
 		? `https://spclient.wg.spotify.com/color-lyrics/v2/track/${id}/image/${encodeURIComponent(
 				image_url
@@ -63,10 +73,19 @@ async function getSpotifyLyrics(id: string, image_url: string | null = null) {
 		headers: {
 			"app-platform": "WebPlayer",
 			"User-Agent": USER_AGENT,
-			Authorization: `Bearer ${await getSpotifyToken(env, database)}`,
+			Authorization: `Bearer ${spotifyToken}`,
 		},
 	})
-		.then((res) => res.json())
+		.then((res) => {
+            // --- LOGGING ---
+            console.log(`Spotify API response status: ${res.status}`);
+            if (!res.ok) {
+                console.log("Spotify API returned a non-OK response.");
+                return null;
+            }
+            // --- END LOGGING ---
+            return res.json();
+        })
 		.then((data) => ({
 			...data,
 			lyrics: {
@@ -79,10 +98,23 @@ async function getSpotifyLyrics(id: string, image_url: string | null = null) {
 				})),
 			},
 		}))
-		.catch(() => null);
+		.catch((err) => {
+            // --- LOGGING ---
+            console.error("Error during Spotify lyrics fetch:", err);
+            // --- END LOGGING ---
+            return null;
+        });
 
-	if (!lyrics || !lyrics.lyrics?.lines || !lyrics.lyrics?.lines.length)
+	if (!lyrics || !lyrics.lyrics?.lines || !lyrics.lyrics?.lines.length) {
+        // --- LOGGING ---
+        console.log("Spotify fetch failed: No lyrics content found in the response.");
+        // --- END LOGGING ---
 		return null;
+    }
+
+    // --- LOGGING ---
+    console.log("Successfully fetched lyrics from Spotify!");
+    // --- END LOGGING ---
 
 	if (database.enabled) {
 		if (
@@ -114,8 +146,15 @@ async function getSpotifyLyrics(id: string, image_url: string | null = null) {
 }
 
 async function getNeteaseLyrics(track_id: string) {
+    // --- LOGGING ---
+    console.log("Attempting to fetch lyrics from NetEase...");
 	const { name, artist } = await getTrackInfo(env, database, track_id);
-	if (!name || !artist) return null;
+	if (!name || !artist) {
+        console.log("NetEase fetch failed: Could not get track info. This is likely due to a bad Spotify token.");
+        return null;
+    }
+    console.log(`NetEase: Found track info: ${name} - ${artist}`);
+    // --- END LOGGING ---
 
 	const id = await fetchNetease({
 		method: "POST",
@@ -130,7 +169,10 @@ async function getNeteaseLyrics(track_id: string) {
 		.then((data) => data.result?.songs?.[0]?.id)
 		.catch(() => null);
 
-	if (!id) return null;
+	if (!id) {
+        console.log("NetEase fetch failed: Could not find song ID on NetEase.");
+        return null;
+    }
 
 	const lyrics = await fetchNetease({
 		method: "POST",
@@ -140,7 +182,10 @@ async function getNeteaseLyrics(track_id: string) {
 		.then((data) => data.lrc?.lyric)
 		.catch(() => null);
 
-	if (!lyrics) return null;
+	if (!lyrics) {
+        console.log("NetEase fetch failed: Found song ID but no lyrics content.");
+        return null;
+    }
 
 	let lines: string[] = lyrics.split("\n");
 	let i = 0;
@@ -186,16 +231,24 @@ async function getNeteaseLyrics(track_id: string) {
 		},
 	};
 
+    console.log("Successfully fetched lyrics from NetEase!");
 	return lyrics_obj;
 }
 
 async function getLRCLibLyrics(track_id: string) {
+    // --- LOGGING ---
+    console.log("Attempting to fetch lyrics from LRCLIB...");
 	const { name, artist, album, duration } = await getTrackInfo(
 		env,
 		database,
 		track_id
 	);
-	if (!name || !artist) return null;
+	if (!name || !artist) {
+        console.log("LRCLIB fetch failed: Could not get track info. This is likely due to a bad Spotify token.");
+        return null;
+    }
+    console.log(`LRCLIB: Found track info: ${name} - ${artist}`);
+    // --- END LOGGING ---
 
 	const url = new URL("https://lrclib.net/api/get");
 	url.searchParams.append("track_name", name);
@@ -214,7 +267,10 @@ async function getLRCLibLyrics(track_id: string) {
 		},
 	}).then((res) => res.json());
 
-	if (!lyrics?.plainLyrics && !lyrics?.syncedLyrics) return null;
+	if (!lyrics?.plainLyrics && !lyrics?.syncedLyrics) {
+        console.log("LRCLIB fetch failed: No lyrics content found.");
+        return null;
+    }
 
 	const lines = lyrics.plainLyrics?.split("\n");
 	const synced_lines = lyrics.syncedLyrics
@@ -250,7 +306,8 @@ async function getLRCLibLyrics(track_id: string) {
 			language: language?.[0]?.[0] || "en",
 		},
 	};
-
+    
+    console.log("Successfully fetched lyrics from LRCLIB!");
 	return lyrics_obj;
 }
 
