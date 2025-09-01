@@ -33,9 +33,17 @@ export default {
 				spotify_response_body: responseBody,
 			};
 		} catch (error) {
+			// --- INICIO DE LA CORRECCIÓN ---
+			let details = "No details available";
+			if (error instanceof Error) {
+				details = error.message;
+			} else {
+				details = String(error);
+			}
+			// --- FIN DE LA CORRECCIÓN ---
 			return {
 				error: "Falló la petición fetch a Spotify.",
-				details: error.message,
+				details: details,
 			};
 		}
 	}),
