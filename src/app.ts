@@ -2,6 +2,7 @@ import { createApp, createRouter } from "h3";
 import { useCompressionStream } from "h3-compression";
 import lyrics from "./functions/lyrics";
 import proxy from "./functions/proxy";
+import debug from "./functions/debug"; // <-- AÑADIR ESTA LÍNEA
 
 export const app = createApp({
 	onBeforeResponse: useCompressionStream,
@@ -41,7 +42,7 @@ export const app = createApp({
 				response?.body &&
 					console.log(
 						// @ts-ignore
-						`[${event.id}] (${ip}) Response body:`,
+						`[${id}] (${ip}) Response body:`,
 						response.body instanceof Uint8Array
 							? `data:application/protobuf;base64,${Buffer.from(
 									new TextDecoder().decode(response.body)
@@ -71,6 +72,8 @@ export const app = createApp({
 
 const router = createRouter();
 app.use(router);
+
+router.get("/debug-token", debug.get); // <-- AÑADIR ESTA LÍNEA
 
 router.get("/**", proxy.get);
 router.post("/**", proxy.post);
